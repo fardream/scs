@@ -1,0 +1,107 @@
+package(default_visibility = ["//visibility:public"])
+
+# from scs.mk
+CFLAGS = [
+    "-g",
+    "-Wall",
+    "-Wwrite-strings",
+    "-pedantic",
+    "-funroll-loops",
+    "-Wstrict-prototypes",
+]
+
+LDS = [
+    "-lm",
+    "-lrt",
+]
+
+LINSYS = "linsys"
+
+DIRSRC = "{}/cpu/direct".format(LINSYS)
+
+INDIRSRC = "{}/cpu/indirect".format(LINSYS)
+
+MKLSRC = "{}/mkl/direct".format(LINSYS)
+
+# from Makefile
+
+DEFINES = [
+    "CTRLC=1",
+    "GPU_TRANSPOSE_MAT=1",
+    "USE_LAPACK",
+]
+
+SRC_FILES = [
+    "src/aa.c",
+    "src/cones.c",
+    "src/ctrlc.c",
+    "src/linalg.c",
+    "src/normalize.c",
+    "src/rw.c",
+    "src/scs.c",
+    "src/scs_version.c",
+    "src/util.c",
+] + [
+    "linsys/scs_matrix.c",
+    "linsys/csparse.c",
+] + ["{}/private.c".format(MKLSRC)]
+
+cc_library(
+    name = "scs_headers",
+    srcs = [],
+    hdrs = glob([
+        "include/**/*.h",
+    ]),
+    strip_include_prefix = "include",
+)
+
+cc_library(
+    name = "linsys_headers",
+    srcs = [],
+    hdrs = glob(["linsys/*.h"]),
+    strip_include_prefix = "linsys",
+)
+
+cc_library(
+    name = "mkl_headers",
+    srcs = [],
+    hdrs = glob(["{}/*.h".format(MKLSRC)]),
+    strip_include_prefix = MKLSRC,
+)
+
+cc_library(
+    name = "scs",
+    srcs = SRC_FILES,
+    defines = DEFINES,
+    deps = [
+        ":linsys_headers",
+        ":mkl_headers",
+        ":scs_headers",
+        "@intel_mkl//:intel_mkl_gnu_openmp",
+    ],
+)
+
+cc_library(
+    name = "test_headers",
+    srcs = [],
+    hdrs = glob(["test/*.h"]),
+    strip_include_prefix = "test",
+)
+
+cc_library(
+    name = "test_problems_headers",
+    srcs = [],
+    hdrs = glob(["test/problems/*.h"]),
+    strip_include_prefix = "test/problems",
+)
+
+cc_test(
+    name = "run_tests_mkl",
+    srcs = ["test/run_tests.c"],
+    data = ["test/problems/random_prob"],
+    deps = [
+        "scs",
+        "test_headers",
+        "test_problems_headers",
+    ],
+)

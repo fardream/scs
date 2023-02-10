@@ -1,0 +1,32 @@
+workspace(name = "cvxgrp_com_scs")
+
+new_local_repository(
+    name = "intel_mkl",
+    build_file_content = """package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "intel_mkl",
+    srcs = [
+        "lib/intel64/libmkl_core.a",
+        "lib/intel64/libmkl_intel_lp64.a",
+        "lib/intel64/libmkl_sequential.a",
+    ],
+    hdrs = glob(["include/*.h"]),
+    linkopts = ["-Wl,--start-group /opt/intel/oneapi/mkl/2023.0.0/lib/intel64/libmkl_intel_lp64.a /opt/intel/oneapi/mkl/2023.0.0/lib/intel64/libmkl_sequential.a /opt/intel/oneapi/mkl/2023.0.0/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl"],
+    strip_include_prefix = "include",
+)
+
+cc_library(
+    name = "intel_mkl_gnu_openmp",
+    srcs = [
+        "lib/intel64/libmkl_core.a",
+        "lib/intel64/libmkl_gnu_thread.a",
+        "lib/intel64/libmkl_intel_lp64.a",
+    ],
+    hdrs = glob(["include/*.h"]),
+    linkopts = ["-Wl,--start-group /opt/intel/oneapi/mkl/2023.0.0/lib/intel64/libmkl_intel_lp64.a /opt/intel/oneapi/mkl/2023.0.0/lib/intel64/libmkl_gnu_thread.a /opt/intel/oneapi/mkl/2023.0.0/lib/intel64/libmkl_core.a -Wl,--end-group -lgomp -lpthread -lm -ldl"],
+    strip_include_prefix = "include",
+)
+""",
+    path = "/opt/intel/oneapi/mkl/2023.0.0",
+)
